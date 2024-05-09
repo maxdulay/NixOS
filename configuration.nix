@@ -5,7 +5,8 @@
 { config, pkgs, ... }:
 {
   imports =
-    [ # Include the results of the hardware scan.
+    [
+      # Include the results of the hardware scan.
       ./hardware-configuration.nix
     ];
 
@@ -42,34 +43,34 @@
     LC_TIME = "en_US.UTF-8";
   };
   fileSystems."/home/maxdu/Windows" = {
-	  device = "/dev/nvme0n1p3";
-	  fsType = "ntfs3";
+    device = "/dev/nvme0n1p3";
+    fsType = "ntfs3";
   };
 
- # Enable OpenGL
+  # Enable OpenGL
   hardware.opengl = {
     enable = true;
     driSupport = true;
     driSupport32Bit = true;
     extraPackages = with pkgs; [
-    vaapiVdpau
+      vaapiVdpau
     ];
   };
   hardware.opentabletdriver = {
     enable = true;
   };
   xdg = {
-	  autostart.enable = true;
-	  portal = { 
-		  enable = true;
-		  extraPortals = [
-		  pkgs.xdg-desktop-portal 
-		  pkgs.xdg-desktop-portal-gtk
-		  ];
-	  };
+    autostart.enable = true;
+    portal = {
+      enable = true;
+      extraPortals = [
+        pkgs.xdg-desktop-portal
+        pkgs.xdg-desktop-portal-gtk
+      ];
+    };
   };
 
-  services.xserver.videoDrivers = ["nvidia"];
+  services.xserver.videoDrivers = [ "nvidia" ];
 
   hardware.nvidia = {
 
@@ -96,33 +97,33 @@
     open = false;
 
     # Enable the Nvidia settings menu,
-	# accessible via `nvidia-settings`.
+    # accessible via `nvidia-settings`.
     nvidiaSettings = true;
 
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
-hardware.nvidia.prime = {
-	# Make sure to use the correct Bus ID values for your system!
-	offload = {
-		enable = true;
-		enableOffloadCmd = true;
-	};
-	#sync.enable = true;
-	intelBusId = "PCI:0:2:0";
-	nvidiaBusId = "PCI:1:0:0";
-};
+  hardware.nvidia.prime = {
+    # Make sure to use the correct Bus ID values for your system!
+    offload = {
+      enable = true;
+      enableOffloadCmd = true;
+    };
+    #sync.enable = true;
+    intelBusId = "PCI:0:2:0";
+    nvidiaBusId = "PCI:1:0:0";
+  };
   # Enable the GNOME Desktop Environment.
   programs.hyprland = {
-     enableNvidiaPatches = true;
-     enable = true;
+    enableNvidiaPatches = true;
+    enable = true;
   };
   hardware.nvidia.forceFullCompositionPipeline = true;
   programs.hyprland.xwayland = {
-     enable = true;
+    enable = true;
   };
   environment.sessionVariables = {
-     NIXOS_OZONE_WL = "1";
+    NIXOS_OZONE_WL = "1";
   };
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
@@ -163,8 +164,8 @@ hardware.nvidia.prime = {
     description = "maxdu";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
-      neovim 
-   #  thunderbird
+      neovim
+      #  thunderbird
     ];
   };
 
@@ -174,126 +175,126 @@ hardware.nvidia.prime = {
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-     ly
-     tetrio-desktop
-     nvidia-vaapi-driver
-     gnupg 
-     autoconf 
-     procps 
-     gnumake 
-     util-linux 
-     m4 
-     gperf 
-     cudatoolkit
-     qt5ct
-     libva
-     wget
-     gcc
-     waybar
-     git
-     kitty
-     hyprland
-     xdg-desktop-portal-gtk
-     xdg-desktop-portal-hyprland
-     xwayland
-     firefox
-     floorp
-     nodejs
-     wl-clipboard
-     obsidian
-     nwg-look
-     bibata-cursors
-     armcord
-     dolphin
-     rustc
-     cargo
-     python3
-     neofetch
-     swaybg
-     openssl
-     networkmanagerapplet
-     meson 
-     wayland-protocols 
-     wayland-utils 
-     wl-clipboard 
-     wlroots
-     pavucontrol
-     racket
-     rofi-wayland
-     bottom
-     dunst
-     obsidian
-     appimage-run
-     unzip
-     wlogout
-     jdk21
-     auto-cpufreq
-     brightnessctl
-     ripgrep
-     powertop
-     flat-remix-gtk
-     gtk3
-     gtk4
-     gtk2
-     zsh
-     oh-my-zsh
-     beeper
-     cava
-     ffmpeg_5-full
-     imagemagick
-     yt-dlp
-     grimblast
-     swappy
-     pinta
-     jetbrains.idea-ultimate
-     pandoc
-     texlive.combined.scheme-full
-     musescore
-     ollama
-     obs-studio
-     audacity
-     libreoffice
-     zip
-     opentabletdriver
-     peaclock
-     cmatrix
-     lazygit
-     nvtop
+    ly
+    tetrio-desktop
+    nvidia-vaapi-driver
+    gnupg
+    autoconf
+    procps
+    gnumake
+    util-linux
+    m4
+    gperf
+    cudatoolkit
+    qt5ct
+    libva
+    wget
+    gcc
+    waybar
+    git
+    kitty
+    hyprland
+    xdg-desktop-portal-gtk
+    xdg-desktop-portal-hyprland
+    xwayland
+    firefox
+    floorp
+    nodejs
+    wl-clipboard
+    obsidian
+    nwg-look
+    bibata-cursors
+    armcord
+    dolphin
+    rustc
+    cargo
+    python3
+    neofetch
+    swaybg
+    openssl
+    networkmanagerapplet
+    meson
+    wayland-protocols
+    wayland-utils
+    wl-clipboard
+    wlroots
+    pavucontrol
+    racket
+    rofi-wayland
+    bottom
+    dunst
+    obsidian
+    appimage-run
+    unzip
+    wlogout
+    jdk21
+    auto-cpufreq
+    brightnessctl
+    ripgrep
+    powertop
+    flat-remix-gtk
+    gtk3
+    gtk4
+    gtk2
+    zsh
+    oh-my-zsh
+    beeper
+    cava
+    ffmpeg_5-full
+    imagemagick
+    yt-dlp
+    grimblast
+    swappy
+    pinta
+    jetbrains.idea-ultimate
+    pandoc
+    texlive.combined.scheme-full
+    musescore
+    ollama
+    obs-studio
+    audacity
+    libreoffice
+    zip
+    opentabletdriver
+    peaclock
+    cmatrix
+    lazygit
+    nvtop
 
 
-  #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-  #  wget
+    #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+    #  wget
   ];
 
   services.auto-cpufreq.enable = true;
   services.ollama = {
-	  #package = pkgs.unstable.ollama; # Uncomment if you want to use the unstable channel, see https://fictionbecomesfact.com/nixos-unstable-channel
-	  enable = true;
-	  acceleration = "cuda"; # Or "rocm"
-	  #environmentVariables = { # I haven't been able to get this to work myself yet, but I'm sharing it for the sake of completeness
-	    # HOME = "/home/ollama";
-	    # OLLAMA_MODELS = "/home/ollama/models";
-	    # OLLAMA_HOST = "0.0.0.0:11434"; # Make Ollama accesible outside of localhost
-	    # OLLAMA_ORIGINS = "http://localhost:8080,http://192.168.0.10:*"; # Allow access, otherwise Ollama returns 403 forbidden due to CORS
-	  #};
-};
+    #package = pkgs.unstable.ollama; # Uncomment if you want to use the unstable channel, see https://fictionbecomesfact.com/nixos-unstable-channel
+    enable = true;
+    acceleration = "cuda"; # Or "rocm"
+    #environmentVariables = { # I haven't been able to get this to work myself yet, but I'm sharing it for the sake of completeness
+    # HOME = "/home/ollama";
+    # OLLAMA_MODELS = "/home/ollama/models";
+    # OLLAMA_HOST = "0.0.0.0:11434"; # Make Ollama accesible outside of localhost
+    # OLLAMA_ORIGINS = "http://localhost:8080,http://192.168.0.10:*"; # Allow access, otherwise Ollama returns 403 forbidden due to CORS
+    #};
+  };
   nixpkgs.config.permittedInsecurePackages = [
-     "electron-25.9.0"
+    "electron-25.9.0"
   ];
 
-	fonts.packages = with pkgs; [
+  fonts.packages = with pkgs; [
 
-	  nerdfonts
-	  noto-fonts
-	  noto-fonts-cjk
-	  noto-fonts-emoji
-	  liberation_ttf
-	  fira-code
-	  fira-code-symbols
-	  mplus-outline-fonts.githubRelease
-	  dina-font
-	  proggyfonts
-	];
+    nerdfonts
+    noto-fonts
+    noto-fonts-cjk
+    noto-fonts-emoji
+    liberation_ttf
+    fira-code
+    fira-code-symbols
+    mplus-outline-fonts.githubRelease
+    dina-font
+    proggyfonts
+  ];
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
