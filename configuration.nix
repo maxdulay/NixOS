@@ -1,4 +1,5 @@
 # Help is available in the configuration.nix(5) man page
+
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, ... }: {
@@ -8,7 +9,7 @@
     <home-manager/nixos>
   ];
 
-  # Bootloader
+  # Bootloader.
   boot.loader = {
     timeout = -1;
     efi.canTouchEfiVariables = true;
@@ -21,19 +22,21 @@
     };
   };
 
-  # Networking
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+
+  # Enable networking
   networking.networkmanager.enable = true;
 
-  # Time
+  # Set your time zone.
   time.timeZone = "America/New_York";
   time.hardwareClockInLocalTime = true;
 
-  # Internationalisation properties.
+  # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
 
   i18n.extraLocaleSettings = {
@@ -47,13 +50,13 @@
     LC_TELEPHONE = "en_US.UTF-8";
     LC_TIME = "en_US.UTF-8";
   };
-  # File sytems
+
   fileSystems."/home/maxdu/Windows" = {
     device = "/dev/nvme0n1p3";
     fsType = "ntfs3";
 
   };
-  # Hardware
+
   # Enable OpenGL
   hardware.opengl = {
     enable = true;
@@ -73,51 +76,52 @@
 
   hardware.nvidia = {
     forceFullCompositionPipeline = true;
-    modesetting.enable = true; # Required for offload
+    # Modesetting is required.
+    modesetting.enable = true;
+
     # fix after suspend
     powerManagement.enable = false;
-    # offload
-    powerManagement.finegrained = true; # Required for offload
-    open = false;
-    nvidiaSettings = true;
-    package =
-      config.boot.kernelPackages.nvidiaPackages.stable; # Make sure is correct for GPU
 
-    prime = {
-      offload = {
-        enable = true;
-        enableOffloadCmd = true;
-      };
-      intelBusId = "PCI:0:2:0";
-      nvidiaBusId = "PCI:1:0:0";
-    };
+    # offload
+    powerManagement.finegrained = true;
+
+    open = false;
+
+    # Enable the Nvidia settings menu,
+    # accessible via `nvidia-settings`.
+    nvidiaSettings = true;
+
+    # Optionally, you may need to select the appropriate driver version for your specific GPU.
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
-  # Window Manager
+  hardware.nvidia.prime = {
+
+    offload = {
+      enable = true;
+      enableOffloadCmd = true;
+    };
+    #sync.enable = true;
+    # Make sure to use the correct Bus ID values for your system!
+    intelBusId = "PCI:0:2:0";
+    nvidiaBusId = "PCI:1:0:0";
+  };
+
   programs.hyprland = {
-    enableNvidiaPatches = true;
     enable = true;
     xwayland.enable = true;
   };
 
-  services.xserver = {
-    layout = "us";
-    xkbVariant = "";
-    libinput.enable = true;
-  };
-  # services.xserver.libinput.enable = true;
-
-  # Sound
-  sound.enable = true;
-  hardware.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-  };
   environment.sessionVariables = { NIXOS_OZONE_WL = "1"; };
+  programs.zsh.enable = true;
+  users.defaultUserShell = pkgs.zsh;
+
+  # Configure keymap in X11
+  services.xserver = {
+    xkb.layout = "us";
+    xkb.variant = "";
+  };
+  services.libinput.enable = true;
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -131,23 +135,21 @@
   #SUBSYSTEM==\"power_supply\",ENV{POWER_SUPPLY_ONLINE}==\"1\",RUN+=\"${pkgs.hyprland}/bin/hyprctl keyword monitor eDP-1,2560x1440@165,0x0,1.66666\"
   #};
 
+  # Enable sound with pipewire.
+  sound.enable = true;
+  hardware.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
+  hardware.bluetooth.enable = true;
+  services.blueman.enable = true;
+
   # Enable touchpad support (enabled default in most desktopManager).
-  # Fonts
-  fonts.packages = with pkgs; [
-
-    nerdfonts
-    noto-fonts
-    noto-fonts-cjk
-    noto-fonts-emoji
-    liberation_ttf
-    fira-code
-    fira-code-symbols
-    mplus-outline-fonts.githubRelease
-    dina-font
-    proggyfonts
-  ];
-
-  users.defaultUserShell = pkgs.zsh;
+  # services.xserver.libinput.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.maxdu = {
@@ -160,7 +162,6 @@
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
-  # Packages
   environment.systemPackages = with pkgs; [
     libnotify
     yt-dlp
@@ -191,7 +192,6 @@
     nodejs
     wl-clipboard
     obsidian
-    nwg-look
     bibata-cursors
     armcord
     dolphin
@@ -205,7 +205,6 @@
     meson
     wayland-protocols
     wayland-utils
-    wl-clipboard
     wlroots
     pavucontrol
     racket
@@ -248,36 +247,38 @@
     peaclock
     cmatrix
     lazygit
-    nvtop
+    nvtopPackages.nvidia
+    killall
     vifm
-    nixfmt
   ];
 
-  # Package config
   hardware.opentabletdriver = {
     enable = true;
     daemon.enable = true;
   };
   services.auto-cpufreq.enable = true;
   services.ollama = {
-    enable = true;
+    enable = false;
     acceleration = "cuda"; # Or "rocm"
   };
-
-  programs.zsh.enable = true;
 
   nixpkgs.config.permittedInsecurePackages = [ "electron-25.9.0" ];
   home-manager.users.maxdu = { pkgs, ... }: {
     home.packages = [ ];
+    home.pointerCursor = {
+      package = pkgs.bibata-cursors;
+      name = "Bibata-Modern-Ice";
+      size = 25;
+    };
     gtk = {
       enable = true;
       theme.name = "adw-gtk3";
       cursorTheme.name = "Bibata-Modern-Ice";
     };
+
     programs.zsh = {
       enable = true;
       enableCompletion = true;
-      #autosuggestion.enable = true;
       syntaxHighlighting.enable = true;
       sessionVariables = { EDITOR = "nvim"; };
       shellAliases = {
@@ -286,9 +287,9 @@
         audio = "yt-dlp -x --audio-format mp3";
       };
       initExtra = ''
-        		neofetch --config ~/.config/neofetch/mini.conf 
-                	bindkey -M viins 'kj' vi-cmd-mode
-                	export EDITOR=nvim
+        	neofetch --config ~/.config/neofetch/mini.conf 
+                bindkey -M viins 'kj' vi-cmd-mode
+                export EDITOR=nvim
       '';
       plugins = [{
         name = "zsh-nix-shell";
@@ -332,6 +333,7 @@
             };
           };
           bluetooth = {
+	    on_click = "blueman-manager";
             format = "";
             format-connected = " {num_connections}";
             format-disabled = "";
@@ -734,6 +736,19 @@
     home.stateVersion = "23.11";
   };
 
+  fonts.packages = with pkgs; [
+
+    nerdfonts
+    noto-fonts
+    noto-fonts-cjk
+    noto-fonts-emoji
+    liberation_ttf
+    fira-code
+    fira-code-symbols
+    mplus-outline-fonts.githubRelease
+    dina-font
+    proggyfonts
+  ];
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -760,5 +775,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "23.11"; # Did you read the comment?
-
 }
