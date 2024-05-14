@@ -163,6 +163,7 @@
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
+    pamixer
     libnotify
     yt-dlp
     ly
@@ -259,7 +260,7 @@
   };
   services.auto-cpufreq.enable = true;
   services.ollama = {
-    enable = false;
+    enable = true;
     acceleration = "cuda"; # Or "rocm"
   };
 
@@ -278,6 +279,12 @@
       cursorTheme.name = "Bibata-Modern-Ice";
       font.name = "CaskaydiaCove Nerd Font Mono";
     };
+    #xdg.mimeApps = {
+#	    enable = true;
+#	    associations.added = {
+		    #"application/png" = ["kitty +kitten icat"];
+	    #};
+    #};
 
     programs.zsh = {
       enable = true;
@@ -392,29 +399,17 @@
         	outline-style: none;
         }
 
-        #lock {
-            background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/lock.png"));
-        }
+        #lock { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/lock.png")); }
 
-        #logout {
-            background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/logout.png"));
-        }
+        #logout { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/logout.png")); }
 
-        #suspend {
-            background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/suspend.png"));
-        }
+        #suspend { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/suspend.png")); }
 
-        #hibernate {
-            background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/hibernate.png"));
-        }
+        #hibernate { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/hibernate.png")); }
 
-        #shutdown {
-            background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/shutdown.png"));
-        }
+        #shutdown { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/shutdown.png")); }
 
-        #reboot {
-            background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/reboot.png"));
-        }
+        #reboot { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/reboot.png")); }
         	    '';
     };
     programs.waybar = {
