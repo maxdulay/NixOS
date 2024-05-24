@@ -2,7 +2,7 @@
 
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }: {
+{ config, pkgs, lib, ... }: {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -51,11 +51,6 @@
     LC_TIME = "en_US.UTF-8";
   };
 
-  fileSystems."/home/maxdu/Windows" = {
-    device = "/dev/nvme0n1p3";
-    fsType = "ntfs3";
-
-  };
 
   # Enable OpenGL
   hardware.opengl = {
@@ -226,7 +221,7 @@
     gtk4
     gtk2
     zsh
-    oh-my-zsh
+    zsh-powerlevel10k
     beeper
     cava
     ffmpeg_5-full
@@ -252,6 +247,7 @@
     killall
     vifm
     nixfmt-classic
+    rust-analyzer
   ];
 
   hardware.opentabletdriver = {
@@ -259,10 +255,12 @@
     daemon.enable = true;
   };
   services.auto-cpufreq.enable = true;
+  services.thermald.enable = true;
   services.ollama = {
     enable = true;
     acceleration = "cuda"; # Or "rocm"
   };
+  systemd.services.ollama.wantedBy = lib.mkForce [ ];
 
   nixpkgs.config.permittedInsecurePackages = [ "electron-25.9.0" ];
   home-manager.users.maxdu = { pkgs, ... }: {
@@ -280,10 +278,10 @@
       font.name = "CaskaydiaCove Nerd Font Mono";
     };
     #xdg.mimeApps = {
-#	    enable = true;
-#	    associations.added = {
-		    #"application/png" = ["kitty +kitten icat"];
-	    #};
+    #	    enable = true;
+    #	    associations.added = {
+    #"application/png" = ["kitty +kitten icat"];
+    #};
     #};
 
     programs.zsh = {
@@ -295,28 +293,38 @@
         ppip3 = "~/.venv/bin/pip3";
         ppython3 = "~/.venv/bin/python3";
         audio = "yt-dlp -x --audio-format mp3";
+	ssh = "kitty +kitten ssh";
       };
       initExtra = ''
-        	neofetch --config ~/.config/neofetch/mini.conf 
-                bindkey -M viins 'kj' vi-cmd-mode
-                export EDITOR=nvim
+			source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
+                	neofetch --config ~/.config/neofetch/mini.conf 
+                        export EDITOR=nvim
+        		ZVM_VI_INSERT_ESCAPE_BINDKEY=kj
+			POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=True
       '';
-      plugins = [{
-        name = "zsh-nix-shell";
-        file = "nix-shell.plugin.zsh";
-        src = pkgs.fetchFromGitHub {
-          owner = "chisui";
-          repo = "zsh-nix-shell";
-          rev = "v0.8.0";
-          sha256 = "1lzrn0n4fxfcgg65v0qhnj7wnybybqzs4adz7xsrkgmcsr0ii8b7";
-        };
-      }];
+      plugins = [
+        {
+          name = "zsh-nix-shell";
+          file = "nix-shell.plugin.zsh";
+          src = pkgs.fetchFromGitHub {
+            owner = "chisui";
+            repo = "zsh-nix-shell";
+            rev = "v0.8.0";
+            sha256 = "1lzrn0n4fxfcgg65v0qhnj7wnybybqzs4adz7xsrkgmcsr0ii8b7";
+          };
+        }
+        {
+          name = "vi-mode";
+          src = pkgs.zsh-vi-mode;
+          file = "share/zsh-vi-mode/zsh-vi-mode.plugin.zsh";
+        }
+      ];
 
-      oh-my-zsh = {
-        enable = true;
-        plugins = [ "git" "sudo" "vi-mode" ];
-        theme = "agnoster";
-      };
+      #oh-my-zsh = {
+      #enable = true;
+      #plugins = [ "git" "sudo" "vi-mode" ];
+      #theme = "agnoster";
+      #};
     };
     programs.kitty = {
       enable = true;
