@@ -51,7 +51,6 @@
     LC_TIME = "en_US.UTF-8";
   };
 
-
   # Enable OpenGL
   hardware.opengl = {
     enable = true;
@@ -254,7 +253,17 @@
     enable = true;
     daemon.enable = true;
   };
-  services.auto-cpufreq.enable = true;
+  services.auto-cpufreq = {
+    enable = true;
+    settings = {
+      battery.governor = "powersave";
+
+      charger = {
+        governor = "powersave";
+        turbo = "auto";
+      };
+    };
+  };
   services.thermald.enable = true;
   services.ollama = {
     enable = true;
@@ -293,14 +302,14 @@
         ppip3 = "~/.venv/bin/pip3";
         ppython3 = "~/.venv/bin/python3";
         audio = "yt-dlp -x --audio-format mp3";
-	ssh = "kitty +kitten ssh";
+        ssh = "kitty +kitten ssh";
       };
       initExtra = ''
-			source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-                	neofetch --config ~/.config/neofetch/mini.conf 
-                        export EDITOR=nvim
-        		ZVM_VI_INSERT_ESCAPE_BINDKEY=kj
-			POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=True
+        			source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
+                        	neofetch --config ~/.config/neofetch/mini.conf 
+                                export EDITOR=nvim
+                		ZVM_VI_INSERT_ESCAPE_BINDKEY=kj
+        			POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=True
       '';
       plugins = [
         {
