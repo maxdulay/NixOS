@@ -6,6 +6,7 @@
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    #./vm.nix
     <home-manager/nixos>
   ];
 
@@ -23,6 +24,7 @@
   };
 
   networking.hostName = "nixos"; # Define your hostname.
+
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -51,13 +53,19 @@
     LC_TIME = "en_US.UTF-8";
   };
 
+  #services.journald.extraConfig = "SystemMaxUse=1G";
+
   # Enable OpenGL
-  hardware.opengl = {
-    enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
-    extraPackages = with pkgs; [ vaapiVdpau ];
+  hardware.graphics = {
+    enable = true; # driSupport = true;
+    enable32Bit = true;
+    extraPackages = with pkgs; [ vaapiVdpau libvdpau-va-gl];
   };
+environment.variables.VDPAU_DRIVER = "va_gl";
+environment.variables.LIBVA_DRIVER_NAME = "nvidia";
+  environment.sessionVariables.VK_DRIVER_FILES =
+    "/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.x86_64.json";
+
   xdg = {
     autostart.enable = true;
     portal = {
@@ -130,7 +138,7 @@
   #};
 
   # Enable sound with pipewire.
-  sound.enable = true;
+  #sound.enable = true;
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
@@ -157,10 +165,10 @@
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
+    neovim
     pamixer
     libnotify
     yt-dlp
-    ly
     tetrio-desktop
     nvidia-vaapi-driver
     gnupg
@@ -172,7 +180,6 @@
     gperf
     cudatoolkit
     qt5ct
-    libva
     wget
     gcc
     waybar
@@ -187,13 +194,12 @@
     nodejs
     wl-clipboard
     obsidian
-    bibata-cursors
     armcord
     dolphin
     rustc
     cargo
     python3
-    neofetch
+    fastfetch
     swaybg
     openssl
     networkmanagerapplet
@@ -223,7 +229,7 @@
     zsh-powerlevel10k
     beeper
     cava
-    ffmpeg_5-full
+    ffmpeg_7-full
     imagemagick
     yt-dlp
     grimblast
@@ -242,12 +248,40 @@
     peaclock
     cmatrix
     lazygit
-    nvtopPackages.nvidia
+    nvtopPackages.full
     killall
     vifm
     nixfmt-classic
     rust-analyzer
+    zoxide
+    prismlauncher
+    steam
+    steam-run
+    mesa
+    vulkan-loader
+    vulkan-validation-layers
+    vulkan-extension-layer
+    vulkan-tools
+    libva
+    libva-utils
   ];
+
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall =
+      true; # Open ports in the firewall for Steam Remote Play
+    dedicatedServer.openFirewall =
+      true; # Open ports in the firewall for Source Dedicated Server
+    localNetworkGameTransfers.openFirewall =
+      true; # Open ports in the firewall for Steam Local Network Game Transfers
+    extraCompatPackages = with pkgs; [
+      vkd3d-proton
+      vkd3d
+      dxvk_2
+      proton-ge-bin
+      freetype
+    ];
+  };
 
   hardware.opentabletdriver = {
     enable = true;
@@ -271,7 +305,7 @@
   };
   systemd.services.ollama.wantedBy = lib.mkForce [ ];
 
-  nixpkgs.config.permittedInsecurePackages = [ "electron-25.9.0" ];
+  #nixpkgs.config.permittedInsecurePackages = [ "electron-25.9.0" ];
   home-manager.users.maxdu = { pkgs, ... }: {
     home.packages = [ ];
     home.pointerCursor = {
@@ -292,7 +326,6 @@
     #"application/png" = ["kitty +kitten icat"];
     #};
     #};
-
     programs.zsh = {
       enable = true;
       enableCompletion = true;
@@ -306,7 +339,7 @@
       };
       initExtra = ''
         			source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-                        	neofetch --config ~/.config/neofetch/mini.conf 
+                        	fastfetch --config ~/.config/fastfetch/mini.jsonc
                                 export EDITOR=nvim
                 		ZVM_VI_INSERT_ESCAPE_BINDKEY=kj
         			POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=True
@@ -334,6 +367,10 @@
       #plugins = [ "git" "sudo" "vi-mode" ];
       #theme = "agnoster";
       #};
+    };
+    programs.zoxide = {
+      enable = true;
+      enableZshIntegration = true;
     };
     programs.kitty = {
       enable = true;
@@ -388,6 +425,8 @@
         inactive_tab_font_style = "bold";
         tab_bar_background = "#101014";
         macos_titlebar_color = "#16161e";
+        wayland_enable_ime = "no";
+        sync_to_monitor = "no";
 
       };
     };
