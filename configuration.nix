@@ -9,6 +9,7 @@
     #./vm.nix
     <home-manager/nixos>
   ];
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # Bootloader.
   boot.loader = {
@@ -33,6 +34,7 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
+  systemd.services.NetworkManager-wait-online.enable = false;
 
   # Set your time zone.
   time.timeZone = "America/New_York";
@@ -59,10 +61,10 @@
   hardware.graphics = {
     enable = true; # driSupport = true;
     enable32Bit = true;
-    extraPackages = with pkgs; [ vaapiVdpau libvdpau-va-gl];
+    extraPackages = with pkgs; [ vaapiVdpau libvdpau-va-gl ];
   };
-environment.variables.VDPAU_DRIVER = "va_gl";
-environment.variables.LIBVA_DRIVER_NAME = "nvidia";
+  environment.variables.VDPAU_DRIVER = "va_gl";
+  environment.variables.LIBVA_DRIVER_NAME = "nvidia";
   environment.sessionVariables.VK_DRIVER_FILES =
     "/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.x86_64.json";
 
@@ -128,14 +130,15 @@ environment.variables.LIBVA_DRIVER_NAME = "nvidia";
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  #  services.udev = {
-  #enable = true;
-  #extraRules = ''
-  #SUBSYSTEM==\"power_supply\",ENV{POWER_SUPPLY_ONLINE}==\"1\",RUN+=\"${pkgs.libnotify}/bin/notify-send "plugged""
-  #'';
-  #SUBSYSTEM==\"power_supply\",ENV{POWER_SUPPLY_ONLINE}==\"1\",RUN+=\"${pkgs.hyprland}/bin/hyprctl keyword monitor eDP-1,2560x1440@165,0x0,1.66666\"
-  #SUBSYSTEM==\"power_supply\",ENV{POWER_SUPPLY_ONLINE}==\"1\",RUN+=\"${pkgs.hyprland}/bin/hyprctl keyword monitor eDP-1,2560x1440@165,0x0,1.66666\"
-  #};
+	 services.udev = {
+	 enable = true;
+	 extraRules = ''
+	 SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.su}/bin/su maxdu -c \"${pkgs.hyprland}/bin/hyprctl -i 0 --batch 'keyword animations:enabled 0;keyword decoration:drop_shadow 0; keyword decoration:blur:enabled 0; keyword general:gaps_in 0; keyword general:gaps_out 0; keyword general:border_size 1; keyword decoration:rounding 0; keyword monitor eDP-1,2560x1440@60,0x0,1.6666; keyword misc:vfr 1'\""
+	 SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 5%"
+	 SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 50%"
+	 SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.su}/bin/su maxdu -c \"${pkgs.hyprland}/bin/hyprctl -i 0 reload"
+	 '';
+	};
 
   # Enable sound with pipewire.
   #sound.enable = true;
@@ -165,6 +168,7 @@ environment.variables.LIBVA_DRIVER_NAME = "nvidia";
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
+    home-manager
     neovim
     pamixer
     libnotify
@@ -189,13 +193,11 @@ environment.variables.LIBVA_DRIVER_NAME = "nvidia";
     xdg-desktop-portal-gtk
     xdg-desktop-portal-hyprland
     xwayland
-    firefox
     floorp
     nodejs
     wl-clipboard
     obsidian
     armcord
-    dolphin
     rustc
     cargo
     python3
@@ -235,6 +237,7 @@ environment.variables.LIBVA_DRIVER_NAME = "nvidia";
     grimblast
     swappy
     pinta
+    loupe
     jetbrains.idea-ultimate
     pandoc
     texlive.combined.scheme-full
@@ -243,6 +246,7 @@ environment.variables.LIBVA_DRIVER_NAME = "nvidia";
     obs-studio
     audacity
     libreoffice
+    zathura
     zip
     opentabletdriver
     peaclock
@@ -251,6 +255,7 @@ environment.variables.LIBVA_DRIVER_NAME = "nvidia";
     nvtopPackages.full
     killall
     vifm
+    python312Packages.pygments
     nixfmt-classic
     rust-analyzer
     zoxide
@@ -264,6 +269,7 @@ environment.variables.LIBVA_DRIVER_NAME = "nvidia";
     vulkan-tools
     libva
     libva-utils
+    xdragon
   ];
 
   programs.steam = {
@@ -361,12 +367,6 @@ environment.variables.LIBVA_DRIVER_NAME = "nvidia";
           file = "share/zsh-vi-mode/zsh-vi-mode.plugin.zsh";
         }
       ];
-
-      #oh-my-zsh = {
-      #enable = true;
-      #plugins = [ "git" "sudo" "vi-mode" ];
-      #theme = "agnoster";
-      #};
     };
     programs.zoxide = {
       enable = true;
