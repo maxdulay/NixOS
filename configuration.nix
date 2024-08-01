@@ -13,7 +13,7 @@
 
   # Bootloader.
   boot.loader = {
-    timeout = -1;
+    timeout = 3;
     efi.canTouchEfiVariables = true;
     grub = {
       enable = true;
@@ -82,19 +82,13 @@
     forceFullCompositionPipeline = true;
     # Modesetting is required.
     modesetting.enable = true;
-
     # fix after suspend
     powerManagement.enable = false;
-
     # offload
     powerManagement.finegrained = true;
-
     open = false;
-
-    # Enable the Nvidia settings menu,
     # accessible via `nvidia-settings`.
     nvidiaSettings = true;
-
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
@@ -130,15 +124,15 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-	 services.udev = {
-	 enable = true;
-	 extraRules = ''
-	 SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.su}/bin/su maxdu -c \"${pkgs.hyprland}/bin/hyprctl -i 0 --batch 'keyword animations:enabled 0;keyword decoration:drop_shadow 0; keyword decoration:blur:enabled 0; keyword general:gaps_in 0; keyword general:gaps_out 0; keyword general:border_size 1; keyword decoration:rounding 0; keyword monitor eDP-1,2560x1440@60,0x0,1.6666; keyword misc:vfr 1'\""
-	 SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 5%"
-	 SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 50%"
-	 SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.su}/bin/su maxdu -c \"${pkgs.hyprland}/bin/hyprctl -i 0 reload"
-	 '';
-	};
+  services.udev = {
+    enable = true;
+    extraRules = ''
+      SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.su}/bin/su maxdu -c \"${pkgs.hyprland}/bin/hyprctl -i 0 --batch 'keyword animations:enabled 0;keyword decoration:drop_shadow 0; keyword decoration:blur:enabled 0; keyword general:gaps_in 0; keyword general:gaps_out 0; keyword general:border_size 1; keyword decoration:rounding 0; keyword monitor eDP-1,2560x1440@60,0x0,1.6666; keyword misc:vfr 1'\""
+      SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 5%"
+      SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 50%"
+      SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.su}/bin/su maxdu -c \"${pkgs.hyprland}/bin/hyprctl -i 0 reload"
+    '';
+  };
 
   # Enable sound with pipewire.
   #sound.enable = true;
@@ -169,6 +163,9 @@
 
   environment.systemPackages = with pkgs; [
     home-manager
+    nh
+    nix-output-monitor
+    nvd
     neovim
     pamixer
     libnotify
@@ -208,7 +205,6 @@
     meson
     wayland-protocols
     wayland-utils
-    wlroots
     pavucontrol
     racket
     rofi-wayland
@@ -311,7 +307,6 @@
   };
   systemd.services.ollama.wantedBy = lib.mkForce [ ];
 
-  #nixpkgs.config.permittedInsecurePackages = [ "electron-25.9.0" ];
   home-manager.users.maxdu = { pkgs, ... }: {
     home.packages = [ ];
     home.pointerCursor = {
@@ -326,12 +321,6 @@
       cursorTheme.name = "Bibata-Modern-Ice";
       font.name = "CaskaydiaCove Nerd Font Mono";
     };
-    #xdg.mimeApps = {
-    #	    enable = true;
-    #	    associations.added = {
-    #"application/png" = ["kitty +kitten icat"];
-    #};
-    #};
     programs.zsh = {
       enable = true;
       enableCompletion = true;
@@ -343,13 +332,14 @@
         audio = "yt-dlp -x --audio-format mp3";
         ssh = "kitty +kitten ssh";
       };
-      initExtra = ''
-        			source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-                        	fastfetch --config ~/.config/fastfetch/mini.jsonc
-                                export EDITOR=nvim
-                		ZVM_VI_INSERT_ESCAPE_BINDKEY=kj
-        			POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=True
-      '';
+      initExtra = # bash
+        ''
+          			source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
+                          	fastfetch --config ~/.config/fastfetch/mini.jsonc
+                                  export EDITOR=nvim
+                  		ZVM_VI_INSERT_ESCAPE_BINDKEY=kj
+          			POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=True
+        '';
       plugins = [
         {
           name = "zsh-nix-shell";
@@ -432,41 +422,42 @@
     };
     programs.wlogout = {
       enable = true;
-      style = ''
-        * {
-        	background-image: none;
-        }
-        window {
-        	background-color: rgba(12, 12, 12, 0.0);
-        }
-        button {
-            color: #6F87E0;
-        	background-color: rgba(0, 0, 0, 0.8);
-        	/* border-style: solid;
-        	border-width: 2px; */
-        	background-repeat: no-repeat;
-        	background-position: center;
-        	background-size: 25%;
-        }
+      style = # css
+        ''
+          * {
+          	background-image: none;
+          }
+          window {
+          	background-color: rgba(12, 12, 12, 0.0);
+          }
+          button {
+              color: #6F87E0;
+          	background-color: rgba(0, 0, 0, 0.8);
+          	/* border-style: solid;
+          	border-width: 2px; */
+          	background-repeat: no-repeat;
+          	background-position: center;
+          	background-size: 25%;
+          }
 
-        button:focus, button:active, button:hover {
-        	color: #000000;
-        	background-color: #6F87E0;
-        	outline-style: none;
-        }
+          button:focus, button:active, button:hover {
+          	color: #000000;
+          	background-color: #6F87E0;
+          	outline-style: none;
+          }
 
-        #lock { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/lock.png")); }
+          #lock { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/lock.png")); }
 
-        #logout { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/logout.png")); }
+          #logout { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/logout.png")); }
 
-        #suspend { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/suspend.png")); }
+          #suspend { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/suspend.png")); }
 
-        #hibernate { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/hibernate.png")); }
+          #hibernate { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/hibernate.png")); }
 
-        #shutdown { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/shutdown.png")); }
+          #shutdown { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/shutdown.png")); }
 
-        #reboot { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/reboot.png")); }
-        	    '';
+          #reboot { background-image: image(url("${pkgs.wlogout}/share/wlogout/icons/reboot.png")); }
+          	    '';
     };
     programs.waybar = {
       enable = true;
@@ -716,183 +707,184 @@
         };
       };
 
-      style = ''
+      style = # css
+        ''
 
-                * {
-                    border: none;
-                    border-radius: 0px;
-                    font-family: "JetBrainsMono Nerd Font";
-                    font-weight: bold;
-                    font-size: 11px;
-                    min-height: 10px;
-                }
+                  * {
+                      border: none;
+                      border-radius: 0px;
+                      font-family: "JetBrainsMono Nerd Font";
+                      font-weight: bold;
+                      font-size: 11px;
+                      min-height: 10px;
+                  }
 
-                @define-color bar-bg rgba(0, 0, 0, 0);
-                @define-color main-bg rgba(0, 0, 0, 0.8);
-                @define-color main-fg #6F87E0;
-                @define-color wb-act-bg #6F87E0;
-                @define-color wb-act-fg #1C1D21;
-                @define-color wb-hvr-bg #6F87E0;
-                @define-color wb-hvr-fg #6F87E0;
+                  @define-color bar-bg rgba(0, 0, 0, 0);
+                  @define-color main-bg rgba(0, 0, 0, 0.8);
+                  @define-color main-fg #6F87E0;
+                  @define-color wb-act-bg #6F87E0;
+                  @define-color wb-act-fg #1C1D21;
+                  @define-color wb-hvr-bg #6F87E0;
+                  @define-color wb-hvr-fg #6F87E0;
 
-                window#waybar {
-                    background: @bar-bg;
-                }
+                  window#waybar {
+                      background: @bar-bg;
+                  }
 
-                tooltip {
-                    background: @main-bg;
-                    color: @main-fg;
-                    border-radius: 4px;
-                    border-width: 0px;
-                }
+                  tooltip {
+                      background: @main-bg;
+                      color: @main-fg;
+                      border-radius: 4px;
+                      border-width: 0px;
+                  }
 
-                #workspaces button {
-                    box-shadow: none;
-                	text-shadow: none;
-                    padding: 0px;
-                    border-radius: 4px;
-                    margin-top: 3px;
-                    margin-bottom: 3px;
-                    padding-left: 3px;
-                    padding-right: 3px;
-                    color: @main-fg;
-                    animation: gradient_f 20s ease-in infinite;
-                    transition: all 0.5s cubic-bezier(.55,-0.68,.48,1.682);
-                }
+                  #workspaces button {
+                      box-shadow: none;
+                  	text-shadow: none;
+                      padding: 0px;
+                      border-radius: 4px;
+                      margin-top: 3px;
+                      margin-bottom: 3px;
+                      padding-left: 3px;
+                      padding-right: 3px;
+                      color: @main-fg;
+                      animation: gradient_f 20s ease-in infinite;
+                      transition: all 0.5s cubic-bezier(.55,-0.68,.48,1.682);
+                  }
 
-                #workspaces button.active {
-                    background: @wb-act-bg;
-                    color: @wb-act-fg;
-                    margin-left: 3px;
-                    padding-left: 12px;
-                    padding-right: 12px;
-                    margin-right: 3px;
-                    animation: gradient_f 20s ease-in infinite;
-                    transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
-                }
+                  #workspaces button.active {
+                      background: @wb-act-bg;
+                      color: @wb-act-fg;
+                      margin-left: 3px;
+                      padding-left: 12px;
+                      padding-right: 12px;
+                      margin-right: 3px;
+                      animation: gradient_f 20s ease-in infinite;
+                      transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+                  }
 
-                #workspaces button:hover {
-                    background: @wb-hvr-bg;
-                    color: @wb-hvr-fg;
-                    padding-left: 3px;
-                    padding-right: 3px;
-                    animation: gradient_f 20s ease-in infinite;
-                    transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
-                }
+                  #workspaces button:hover {
+                      background: @wb-hvr-bg;
+                      color: @wb-hvr-fg;
+                      padding-left: 3px;
+                      padding-right: 3px;
+                      animation: gradient_f 20s ease-in infinite;
+                      transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+                  }
 
-                #taskbar button {
-                    box-shadow: none;
-                	text-shadow: none;
-                    padding: 0px;
-                    border-radius: 4px;
-                    margin-top: 3px;
-                    margin-bottom: 3px;
-                    padding-left: 3px;
-                    padding-right: 3px;
-                    color: @wb-color;
-                    animation: gradient_f 20s ease-in infinite;
-                    transition: all 0.5s cubic-bezier(.55,-0.68,.48,1.682);
-                }
+                  #taskbar button {
+                      box-shadow: none;
+                  	text-shadow: none;
+                      padding: 0px;
+                      border-radius: 4px;
+                      margin-top: 3px;
+                      margin-bottom: 3px;
+                      padding-left: 3px;
+                      padding-right: 3px;
+                      color: @wb-color;
+                      animation: gradient_f 20s ease-in infinite;
+                      transition: all 0.5s cubic-bezier(.55,-0.68,.48,1.682);
+                  }
 
-                #taskbar button.active {
-                    background: @wb-act-bg;
-                    color: @wb-act-color;
-                    margin-left: 3px;
-                    padding-left: 12px;
-                    padding-right: 12px;
-                    margin-right: 3px;
-                    animation: gradient_f 20s ease-in infinite;
-                    transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
-                }
+                  #taskbar button.active {
+                      background: @wb-act-bg;
+                      color: @wb-act-color;
+                      margin-left: 3px;
+                      padding-left: 12px;
+                      padding-right: 12px;
+                      margin-right: 3px;
+                      animation: gradient_f 20s ease-in infinite;
+                      transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+                  }
 
-                #taskbar button:hover {
-                    background: @wb-hvr-bg;
-                    color: @wb-hvr-color;
-                    padding-left: 3px;
-                    padding-right: 3px;
-                    animation: gradient_f 20s ease-in infinite;
-                    transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
-                }
+                  #taskbar button:hover {
+                      background: @wb-hvr-bg;
+                      color: @wb-hvr-color;
+                      padding-left: 3px;
+                      padding-right: 3px;
+                      animation: gradient_f 20s ease-in infinite;
+                      transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+                  }
 
-                #backlight,
-                #battery,
-                #bluetooth,
-                #custom-cliphist,
-                #clock,
-                #cpu,
-                #custom-gpuinfo,
-                #idle_inhibitor,
-                #language,
-                #memory,
-                #custom-mode,
-                #mpris,
-                #network,
-                #custom-power,
-                #pulseaudio,
-                #custom-spotify,
-                #taskbar,
-                #tray,
-                #custom-updates,
-                #custom-wallchange,
-                #custom-wbar,
-                #window,
-                #workspaces,
-                #custom-l_end,
-                #custom-r_end,
-                #custom-sl_end,
-                #custom-sr_end,
-                #custom-rl_end,
-                #custom-rr_end 
-        	{
-                    color: @main-fg;
-                    background: @main-bg;
-                    opacity: 1;
-                    margin: 4px 0px 4px 0px;
-                    padding-left: 4px;
-                    padding-right: 4px;
-                }
+                  #backlight,
+                  #battery,
+                  #bluetooth,
+                  #custom-cliphist,
+                  #clock,
+                  #cpu,
+                  #custom-gpuinfo,
+                  #idle_inhibitor,
+                  #language,
+                  #memory,
+                  #custom-mode,
+                  #mpris,
+                  #network,
+                  #custom-power,
+                  #pulseaudio,
+                  #custom-spotify,
+                  #taskbar,
+                  #tray,
+                  #custom-updates,
+                  #custom-wallchange,
+                  #custom-wbar,
+                  #window,
+                  #workspaces,
+                  #custom-l_end,
+                  #custom-r_end,
+                  #custom-sl_end,
+                  #custom-sr_end,
+                  #custom-rl_end,
+                  #custom-rr_end 
+          	{
+                      color: @main-fg;
+                      background: @main-bg;
+                      opacity: 1;
+                      margin: 4px 0px 4px 0px;
+                      padding-left: 4px;
+                      padding-right: 4px;
+                  }
 
-                #workspaces,
-                #taskbar {
-                    padding: 0px;
-                }
+                  #workspaces,
+                  #taskbar {
+                      padding: 0px;
+                  }
 
-                #custom-r_end {
-                    border-radius: 0px 5px 5px 0px;
-                    margin-right: 9px;
-                    padding-right: 3px;
-                }
+                  #custom-r_end {
+                      border-radius: 0px 5px 5px 0px;
+                      margin-right: 9px;
+                      padding-right: 3px;
+                  }
 
-                #custom-l_end {
-                    border-radius: 5px 0px 0px 5px;
-                    margin-left: 9px;
-                    padding-left: 3px;
-                }
+                  #custom-l_end {
+                      border-radius: 5px 0px 0px 5px;
+                      margin-left: 9px;
+                      padding-left: 3px;
+                  }
 
-                #custom-sr_end {
-                    border-radius: 0px;
-                    margin-right: 9px;
-                    padding-right: 3px;
-                }
+                  #custom-sr_end {
+                      border-radius: 0px;
+                      margin-right: 9px;
+                      padding-right: 3px;
+                  }
 
-                #custom-sl_end {
-                    border-radius: 0px;
-                    margin-left: 9px;
-                    padding-left: 3px;
-                }
+                  #custom-sl_end {
+                      border-radius: 0px;
+                      margin-left: 9px;
+                      padding-left: 3px;
+                  }
 
-                #custom-rr_end {
-                    border-radius: 0px 5px 5px 0px;
-                    margin-right: 9px;
-                    padding-right: 3px;
-                }
+                  #custom-rr_end {
+                      border-radius: 0px 5px 5px 0px;
+                      margin-right: 9px;
+                      padding-right: 3px;
+                  }
 
-                #custom-rl_end {
-                    border-radius: 5px 0px 0px 5px;
-                    margin-left: 9px;
-                    padding-left: 3px;
-                }
-                	    '';
+                  #custom-rl_end {
+                      border-radius: 5px 0px 0px 5px;
+                      margin-left: 9px;
+                      padding-left: 3px;
+                  }
+                  	    '';
     };
     home.stateVersion = "23.11";
   };
