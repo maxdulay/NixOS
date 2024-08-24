@@ -35,6 +35,7 @@
   # Enable networking
   networking.networkmanager.enable = true;
   systemd.services.NetworkManager-wait-online.enable = false;
+  services.journald.extraConfig = "SystemMaxUse=100M";
 
   # Set your time zone.
   time.timeZone = "America/New_York";
@@ -55,8 +56,6 @@
     LC_TIME = "en_US.UTF-8";
   };
 
-  #services.journald.extraConfig = "SystemMaxUse=1G";
-
   # Enable OpenGL
   hardware.graphics = {
     enable = true; # driSupport = true;
@@ -72,7 +71,12 @@
     autostart.enable = true;
     portal = {
       enable = true;
-      extraPortals = [ pkgs.xdg-desktop-portal pkgs.xdg-desktop-portal-gtk ];
+      extraPortals = [
+        pkgs.xdg-desktop-portal
+        pkgs.xdg-desktop-portal-gtk
+				#pkgs.xdg-desktop-portal-wlr
+        pkgs.xdg-desktop-portal-hyprland
+      ];
     };
   };
 
@@ -108,6 +112,7 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
+    portalPackage = pkgs.xdg-desktop-portal-hyprland;
   };
 
   environment.sessionVariables = { NIXOS_OZONE_WL = "1"; };
@@ -116,6 +121,7 @@
 
   # Configure keymap in X11
   services.xserver = {
+    dpi = 10;
     xkb.layout = "us";
     xkb.variant = "";
   };
@@ -127,10 +133,13 @@
   services.udev = {
     enable = true;
     extraRules = ''
+      # Rules for power saving 
       SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.su}/bin/su maxdu -c \"${pkgs.hyprland}/bin/hyprctl -i 0 --batch 'keyword animations:enabled 0;keyword decoration:drop_shadow 0; keyword decoration:blur:enabled 0; keyword general:gaps_in 0; keyword general:gaps_out 0; keyword general:border_size 1; keyword decoration:rounding 0; keyword monitor eDP-1,2560x1440@60,0x0,1.6666; keyword misc:vfr 1'\""
       SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 5%"
       SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 50%"
       SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.su}/bin/su maxdu -c \"${pkgs.hyprland}/bin/hyprctl -i 0 reload"
+      # Rules for PS3 Eye
+      ATTR{idVendor}=="1415", ATTR{idProduct}=="2000", MODE+="777"
     '';
   };
 
@@ -155,7 +164,7 @@
     isNormalUser = true;
     description = "maxdu";
     extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [ neovim ];
+    #packages = with pkgs; [ ];
   };
 
   # Allow unfree packages
@@ -185,16 +194,16 @@
     gcc
     waybar
     git
+    gh
     kitty
     hyprland
     xdg-desktop-portal-gtk
-    xdg-desktop-portal-hyprland
     xwayland
     floorp
     nodejs
     wl-clipboard
     obsidian
-    armcord
+    vesktop
     rustc
     cargo
     python3
@@ -229,7 +238,6 @@
     cava
     ffmpeg_7-full
     imagemagick
-    yt-dlp
     grimblast
     swappy
     pinta
@@ -255,9 +263,12 @@
     nixfmt-classic
     rust-analyzer
     zoxide
-    prismlauncher
+    (prismlauncher.override { withWaylandGLFW = true; })
     steam
     steam-run
+    protonup
+    mangohud
+    r2modman
     mesa
     vulkan-loader
     vulkan-validation-layers
@@ -266,24 +277,22 @@
     libva
     libva-utils
     xdragon
+    kdenlive
   ];
 
   programs.steam = {
     enable = true;
-    remotePlay.openFirewall =
-      true; # Open ports in the firewall for Steam Remote Play
-    dedicatedServer.openFirewall =
-      true; # Open ports in the firewall for Source Dedicated Server
-    localNetworkGameTransfers.openFirewall =
-      true; # Open ports in the firewall for Steam Local Network Game Transfers
-    extraCompatPackages = with pkgs; [
-      vkd3d-proton
-      vkd3d
-      dxvk_2
-      proton-ge-bin
-      freetype
-    ];
+    gamescopeSession.enable = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
+    localNetworkGameTransfers.openFirewall = true;
+    extraCompatPackages = with pkgs; [ vkd3d-proton vkd3d dxvk_2 freetype ];
   };
+  environment.sessionVariables.STEAM_EXTRA_COMPAT_TOOLS_PATH =
+    "/home/maxdu/.steam/root/compatibilitytools.d";
+
+  programs.gamemode.enable = true;
+  environment.variables.GAMEMODERUNEXEC = "nvidia-offload";
 
   hardware.opentabletdriver = {
     enable = true;
@@ -292,13 +301,17 @@
   services.auto-cpufreq = {
     enable = true;
     settings = {
-      battery.governor = "powersave";
+      battery = { governor = "powersave"; };
 
       charger = {
         governor = "powersave";
         turbo = "auto";
       };
     };
+  };
+  services.auto-epp = {
+    enable = true;
+    settings.Settings.epp_state_for_BAT = "power";
   };
   services.thermald.enable = true;
   services.ollama = {
@@ -310,16 +323,26 @@
   home-manager.users.maxdu = { pkgs, ... }: {
     home.packages = [ ];
     home.pointerCursor = {
+      gtk.enable = true;
+			#x11.enable = true;
       package = pkgs.bibata-cursors;
       name = "Bibata-Modern-Ice";
-      size = 25;
+      size = 20;
+
     };
+
     gtk = {
       enable = true;
       theme.name = "Materia-dark";
       theme.package = pkgs.materia-theme;
       cursorTheme.name = "Bibata-Modern-Ice";
+      cursorTheme.size = 20;
       font.name = "CaskaydiaCove Nerd Font Mono";
+    };
+
+    programs.neovim = {
+      enable = true;
+      extraLuaPackages = luaPkgs: with pkgs.luajitPackages; [ magick ];
     };
     programs.zsh = {
       enable = true;
@@ -416,7 +439,7 @@
         tab_bar_background = "#101014";
         macos_titlebar_color = "#16161e";
         wayland_enable_ime = "no";
-        sync_to_monitor = "no";
+        sync_to_monitor = "yes";
 
       };
     };
