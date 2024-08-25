@@ -72,7 +72,7 @@
     portal = {
       enable = true;
       extraPortals = [
-        pkgs.xdg-desktop-portal
+				pkgs.xdg-desktop-portal
         pkgs.xdg-desktop-portal-gtk
 				#pkgs.xdg-desktop-portal-wlr
         pkgs.xdg-desktop-portal-hyprland
@@ -112,7 +112,7 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-    portalPackage = pkgs.xdg-desktop-portal-hyprland;
+		#portalPackage = pkgs.xdg-desktop-portal-hyprland;
   };
 
   environment.sessionVariables = { NIXOS_OZONE_WL = "1"; };
@@ -121,7 +121,6 @@
 
   # Configure keymap in X11
   services.xserver = {
-    dpi = 10;
     xkb.layout = "us";
     xkb.variant = "";
   };
@@ -198,7 +197,9 @@
     kitty
     hyprland
     xdg-desktop-portal-gtk
+    xdg-desktop-portal-hyprland
     xwayland
+    xorg.xsetroot
     floorp
     nodejs
     wl-clipboard
@@ -298,6 +299,7 @@
     enable = true;
     daemon.enable = true;
   };
+
   services.auto-cpufreq = {
     enable = true;
     settings = {
@@ -324,7 +326,7 @@
     home.packages = [ ];
     home.pointerCursor = {
       gtk.enable = true;
-			#x11.enable = true;
+      x11.enable = true;
       package = pkgs.bibata-cursors;
       name = "Bibata-Modern-Ice";
       size = 20;
@@ -340,6 +342,7 @@
       font.name = "CaskaydiaCove Nerd Font Mono";
     };
 
+    
     programs.neovim = {
       enable = true;
       extraLuaPackages = luaPkgs: with pkgs.luajitPackages; [ magick ];
