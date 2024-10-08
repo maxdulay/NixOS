@@ -3,14 +3,12 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, lib, ... }: {
-  imports = [
-    # Include the results of the hardware scan.
+  imports = [ # Include the results of the hardware scan.
     ./hardware-configuration.nix
     #./vm.nix
     <home-manager/nixos>
   ];
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
   # Bootloader.
   boot.loader = {
     timeout = 3;
@@ -23,9 +21,26 @@
       fontSize = 48;
     };
   };
-
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  networking.firewall = { allowedUDPPorts = [ 47111 ]; };
   networking.hostName = "nixos"; # Define your hostname.
+  networking.wg-quick.interfaces = {
+    wg0 = {
+      address = [ "10.100.0.2/32" "fd08:4711::2/128" ];
+      dns = [ "10.100.0.1" "fd08:4711::1" ];
+      privateKey = "WNzS3Rwe2Vw+epCzrMJ80J3zdQZ3P1OGH5hqAiG2kGw=";
 
+      peers = [{
+        publicKey = "GpsMLdo0FPLhtTh1EXdJdC1hCWecshdqGycYa32c+jk=";
+        presharedKey = "onE1ysffFNwrxpiXthDK1yofYUuQCah11PDBDyzF4+c=";
+        allowedIPs = [ "10.100.0.1/32" "fd08:4711::1/128" ];
+        endpoint = "ssh.maxdu.lat:47111";
+        persistentKeepalive = 25;
+      }];
+    };
+  };
+
+  systemd.services.wg-quick-wg0.wantedBy = lib.mkForce [ "default.target" ];
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -34,7 +49,7 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
-  systemd.services.NetworkManager-wait-online.enable = false;
+  systemd.services.NetworkManager-wait-online.enable = true;
   services.journald.extraConfig = "SystemMaxUse=100M";
 
   # Set your time zone.
@@ -72,9 +87,9 @@
     portal = {
       enable = true;
       extraPortals = [
-				pkgs.xdg-desktop-portal
+        pkgs.xdg-desktop-portal
         pkgs.xdg-desktop-portal-gtk
-				#pkgs.xdg-desktop-portal-wlr
+        pkgs.xdg-desktop-portal-wlr
         pkgs.xdg-desktop-portal-hyprland
       ];
     };
@@ -94,7 +109,7 @@
     # accessible via `nvidia-settings`.
     nvidiaSettings = true;
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    package = config.boot.kernelPackages.nvidiaPackages.beta;
   };
 
   hardware.nvidia.prime = {
@@ -112,7 +127,7 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-		#portalPackage = pkgs.xdg-desktop-portal-hyprland;
+    portalPackage = pkgs.xdg-desktop-portal-hyprland;
   };
 
   environment.sessionVariables = { NIXOS_OZONE_WL = "1"; };
@@ -134,11 +149,11 @@
     extraRules = ''
       # Rules for power saving 
       SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.su}/bin/su maxdu -c \"${pkgs.hyprland}/bin/hyprctl -i 0 --batch 'keyword animations:enabled 0;keyword decoration:drop_shadow 0; keyword decoration:blur:enabled 0; keyword general:gaps_in 0; keyword general:gaps_out 0; keyword general:border_size 1; keyword decoration:rounding 0; keyword monitor eDP-1,2560x1440@60,0x0,1.6666; keyword misc:vfr 1'\""
-      SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 5%"
-      SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 50%"
+      SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="0", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 5%%"
+      SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.brightnessctl}/bin/brightnessctl set 50%%"
       SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_ONLINE}=="1", RUN+="${pkgs.su}/bin/su maxdu -c \"${pkgs.hyprland}/bin/hyprctl -i 0 reload"
       # Rules for PS3 Eye
-      ATTR{idVendor}=="1415", ATTR{idProduct}=="2000", MODE+="777"
+      ATTR{idVendor}=="1415", ATTR{idProduct}=="2000", MODE="777"
     '';
   };
 
@@ -153,6 +168,13 @@
     pulse.enable = true;
   };
   hardware.bluetooth.enable = true;
+hardware.bluetooth = {
+ input = {
+      General = {
+		ClassicBondedOnly = false;
+      };
+    };
+  };
   services.blueman.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
@@ -162,124 +184,151 @@
   users.users.maxdu = {
     isNormalUser = true;
     description = "maxdu";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "gamemode" "libvirtd" ];
     #packages = with pkgs; [ ];
   };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
-  environment.systemPackages = with pkgs; [
-    home-manager
-    nh
-    nix-output-monitor
-    nvd
-    neovim
-    pamixer
-    libnotify
-    yt-dlp
-    tetrio-desktop
-    nvidia-vaapi-driver
-    gnupg
-    autoconf
-    procps
-    gnumake
-    util-linux
-    m4
-    gperf
-    cudatoolkit
-    qt5ct
-    wget
-    gcc
-    waybar
-    git
-    gh
-    kitty
-    hyprland
-    xdg-desktop-portal-gtk
-    xdg-desktop-portal-hyprland
-    xwayland
-    xorg.xsetroot
-    floorp
-    nodejs
-    wl-clipboard
-    obsidian
-    vesktop
-    rustc
-    cargo
-    python3
-    fastfetch
-    swaybg
-    openssl
-    networkmanagerapplet
-    meson
-    wayland-protocols
-    wayland-utils
-    pavucontrol
-    racket
-    rofi-wayland
-    bottom
-    dunst
-    obsidian
-    appimage-run
-    unzip
-    wlogout
-    jdk21
-    auto-cpufreq
-    brightnessctl
-    ripgrep
-    powertop
-    flat-remix-gtk
-    gtk3
-    gtk4
-    gtk2
-    zsh
-    zsh-powerlevel10k
-    beeper
-    cava
-    ffmpeg_7-full
-    imagemagick
-    grimblast
-    swappy
-    pinta
-    loupe
-    jetbrains.idea-ultimate
-    pandoc
-    texlive.combined.scheme-full
-    musescore
-    ollama
-    obs-studio
-    audacity
-    libreoffice
-    zathura
-    zip
-    opentabletdriver
-    peaclock
-    cmatrix
-    lazygit
-    nvtopPackages.full
-    killall
-    vifm
-    python312Packages.pygments
-    nixfmt-classic
-    rust-analyzer
-    zoxide
-    (prismlauncher.override { withWaylandGLFW = true; })
-    steam
-    steam-run
-    protonup
-    mangohud
-    r2modman
-    mesa
-    vulkan-loader
-    vulkan-validation-layers
-    vulkan-extension-layer
-    vulkan-tools
-    libva
-    libva-utils
-    xdragon
-    kdenlive
-  ];
+
+  environment.systemPackages = with pkgs;
+      [   
+      home-manager
+      nh
+      nix-output-monitor
+      nvd
+      neovim
+      pamixer
+      libnotify
+      yt-dlp
+      tetrio-desktop
+      nvidia-vaapi-driver
+      gnupg
+      autoconf
+      procps
+      gnumake
+      util-linux
+      m4
+      gperf
+      cudatoolkit
+      qt5ct
+      libsForQt5.qt5.qtwayland
+      wget
+      gcc
+      waybar
+      git
+      gh
+      kitty
+      hyprland
+      hyprcursor
+      xdg-desktop-portal-gtk
+      xdg-desktop-portal-hyprland
+      xwayland
+      xorg.xsetroot
+      floorp
+      nodejs
+      obsidian
+      vesktop
+      rustc
+      cargo
+      python3
+      fastfetch
+      swaybg
+      openssl
+      networkmanagerapplet
+      meson
+      wayland-protocols
+      wayland-utils
+      wl-clipboard
+      pavucontrol
+      rofi-wayland
+      bottom
+      dunst
+      obsidian
+      appimage-run
+      unzip
+      wlogout
+      jdk21
+      auto-cpufreq
+      brightnessctl
+      ripgrep
+      powertop
+      flat-remix-gtk
+      gtk3
+      gtk4
+      gtk2
+      zsh
+      zsh-powerlevel10k
+      beeper
+      cava
+      ffmpeg_7-full
+      imagemagick
+      grimblast
+      tesseract
+      swappy
+      pinta
+      loupe
+      jetbrains.idea-ultimate
+      pandoc
+      texlive.combined.scheme-full
+      musescore
+      ollama
+      obs-studio
+      audacity
+      libreoffice
+      zathura
+      zip
+      opentabletdriver
+      peaclock
+      cmatrix
+      lazygit
+      nvtopPackages.full
+      killall
+      vifm
+      python312Packages.pygments
+      nixfmt-classic
+      rust-analyzer
+      clang-tools
+      lua-language-server
+      zoxide
+      prismlauncher
+      # steam
+      (steam.override {extraPkgs = pkgs: [ wine ]; }).run
+      steam-run
+      protonup
+      mangohud
+      r2modman
+      mesa
+      vulkan-loader
+      vulkan-validation-layers
+      vulkan-extension-layer
+      vulkan-tools
+      libva
+      libva-utils
+      xdragon
+      kdenlive
+      playerctl
+      rstudio
+      R
+      rPackages.rmarkdown
+      rPackages.languageserver
+      zoom-us
+      multipass
+      gamescope
+      osu-lazer-bin
+      libimobiledevice
+      ifuse
+    ];
+  services.usbmuxd = {
+		enable = true;
+	};
+
+  virtualisation.multipass.enable = true;
+  systemd.services.multipass.wantedBy = lib.mkForce [ ];
+  programs.virt-manager.enable = true;
+
+  virtualisation.libvirtd.enable = true;
 
   programs.steam = {
     enable = true;
@@ -311,10 +360,10 @@
       };
     };
   };
-  services.auto-epp = {
-    enable = true;
-    settings.Settings.epp_state_for_BAT = "power";
-  };
+  # services.auto-epp = {
+  #   enable = true;
+  #   settings.Settings.epp_state_for_BAT = "power";
+  # };
   services.thermald.enable = true;
   services.ollama = {
     enable = true;
@@ -329,7 +378,7 @@
       x11.enable = true;
       package = pkgs.bibata-cursors;
       name = "Bibata-Modern-Ice";
-      size = 20;
+      size = 24;
 
     };
 
@@ -338,11 +387,10 @@
       theme.name = "Materia-dark";
       theme.package = pkgs.materia-theme;
       cursorTheme.name = "Bibata-Modern-Ice";
-      cursorTheme.size = 20;
+      cursorTheme.size = 24;
       font.name = "CaskaydiaCove Nerd Font Mono";
     };
 
-    
     programs.neovim = {
       enable = true;
       extraLuaPackages = luaPkgs: with pkgs.luajitPackages; [ magick ];
@@ -357,14 +405,17 @@
         ppython3 = "~/.venv/bin/python3";
         audio = "yt-dlp -x --audio-format mp3";
         ssh = "kitty +kitten ssh";
+        dr = "dragon";
+	multishell = "systemctl start multipass; sleep 3; multipass shell";
+	multistop = "multipass stop; sleep 1; systemctl stop multipass";
       };
       initExtra = # bash
         ''
-          			source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-                          	fastfetch --config ~/.config/fastfetch/mini.jsonc
-                                  export EDITOR=nvim
-                  		ZVM_VI_INSERT_ESCAPE_BINDKEY=kj
-          			POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=True
+          source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
+          fastfetch --config ~/.config/fastfetch/mini.jsonc
+          export EDITOR=nvim
+          ZVM_VI_INSERT_ESCAPE_BINDKEY=kj
+          POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=True
         '';
       plugins = [
         {
@@ -442,8 +493,19 @@
         tab_bar_background = "#101014";
         macos_titlebar_color = "#16161e";
         wayland_enable_ime = "no";
-        sync_to_monitor = "yes";
+        #sync_to_monitor = "yes";
+        allow_remote_control = "yes";
+        listen_on = "unix:/tmp/kitty";
+        shell_integration = "enabled";
 
+      };
+      extraConfig = ''
+        action_alias kitty_scrollback_nvim kitten /home/maxdu/.local/share/nvim/lazy/kitty-scrollback.nvim/python/kitty_scrollback_nvim.py
+        			'';
+      keybindings = {
+        "kitty_mod+h" = "kitty_scrollback_nvim";
+        "kitty_mod+g" =
+          "kitty_scrollback_nvim --config ksb_builtin_last_cmd_output";
       };
     };
     programs.wlogout = {
@@ -538,7 +600,7 @@
               on-scroll = 1;
             };
             format = "{:%I:%M %p}";
-            format-alt = "{:%R 󰃭 %d·%m·%y}";
+            format-alt = "{:%R 󰃭 %m·%d·%y}";
             tooltip-format = "<tt>{calendar}</tt>";
           };
           cpu = {
@@ -916,7 +978,6 @@
   };
 
   fonts.packages = with pkgs; [
-
     nerdfonts
     noto-fonts
     noto-fonts-cjk
